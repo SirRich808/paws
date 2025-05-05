@@ -7,8 +7,15 @@ const Hero = () => {
       {/* Video background */}
       <div className="absolute inset-0 z-0">
         <div className="absolute inset-0 bg-lava opacity-70 z-10"></div>
-        {/* Updated background image with the user-provided image */}
-        <div className="bg-[url('/lovable-uploads/c8733489-7137-4b7a-9936-0fec54830978.png')] bg-cover bg-center h-full w-full"></div>
+        {/* Updated background image with proper path and styling */}
+        <div 
+          className="h-full w-full"
+          style={{
+            backgroundImage: "url('/lovable-uploads/c8733489-7137-4b7a-9936-0fec54830978.png')",
+            backgroundSize: "cover",
+            backgroundPosition: "center"
+          }}
+        ></div>
       </div>
       
       {/* Content */}
