@@ -9,10 +9,10 @@ const Hero = () => {
         {/* This overlay div has a semi-transparent background */}
         <div className="absolute inset-0 bg-lava opacity-70 z-10"></div>
         
-        {/* Image container - using img tag instead of background */}
+        {/* Image container - using direct img tag with absolute positioning */}
         <img 
-          src="/lovable-uploads/c8733489-7137-4b7a-9936-0fec54830978.png"
-          alt="Hawaiian backyard"
+          src="/lovable-uploads/96adf5e6-14b4-4501-bae7-5a20da774c5b.png"
+          alt="Hawaiian backyard with poop cleanup service visualization"
           className="absolute inset-0 w-full h-full object-cover"
         />
       </div>
