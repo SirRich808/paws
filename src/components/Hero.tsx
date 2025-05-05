@@ -4,18 +4,17 @@ import { Link } from "react-router-dom";
 const Hero = () => {
   return (
     <div className="relative min-h-screen flex items-center justify-center overflow-hidden">
-      {/* Video background */}
+      {/* Background image with overlay */}
       <div className="absolute inset-0 z-0">
+        {/* This overlay div has a semi-transparent background */}
         <div className="absolute inset-0 bg-lava opacity-70 z-10"></div>
-        {/* Updated background image with proper path and styling */}
-        <div 
-          className="h-full w-full"
-          style={{
-            backgroundImage: "url('/lovable-uploads/c8733489-7137-4b7a-9936-0fec54830978.png')",
-            backgroundSize: "cover",
-            backgroundPosition: "center"
-          }}
-        ></div>
+        
+        {/* Image container - using img tag instead of background */}
+        <img 
+          src="/lovable-uploads/c8733489-7137-4b7a-9936-0fec54830978.png"
+          alt="Hawaiian backyard"
+          className="absolute inset-0 w-full h-full object-cover"
+        />
       </div>
       
       {/* Content */}
