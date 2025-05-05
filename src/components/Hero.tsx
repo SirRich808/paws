@@ -7,8 +7,8 @@ const Hero = () => {
       {/* Video background */}
       <div className="absolute inset-0 z-0">
         <div className="absolute inset-0 bg-lava opacity-70 z-10"></div>
-        {/* Placeholder for video - in production, replace with actual video */}
-        <div className="bg-[url('https://images.unsplash.com/photo-1465379944081-7f47de8d74ac?auto=format&fit=crop&q=80&w=2574')] bg-cover bg-center h-full w-full"></div>
+        {/* Updated background image with the user-provided image */}
+        <div className="bg-[url('/lovable-uploads/c8733489-7137-4b7a-9936-0fec54830978.png')] bg-cover bg-center h-full w-full"></div>
       </div>
       
       {/* Content */}
