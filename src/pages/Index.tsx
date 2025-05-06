@@ -11,6 +11,11 @@ import Footer from "../components/Footer";
 const Index = () => {
   useEffect(() => {
     window.scrollTo(0, 0);
+    
+    // Preload the hero image
+    const heroImage = new Image();
+    heroImage.src = "/lovable-uploads/96adf5e6-14b4-4501-bae7-5a20da774c5b.png";
+    heroImage.fetchPriority = "high";
   }, []);
 
   return (
