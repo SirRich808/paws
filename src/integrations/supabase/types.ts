@@ -69,6 +69,45 @@ export type Database = {
           },
         ]
       }
+      commercial_inquiries: {
+        Row: {
+          address: string
+          business_name: string
+          contact_name: string
+          created_at: string
+          email: string
+          id: string
+          message: string | null
+          phone: string
+          property_type: string
+          status: string
+        }
+        Insert: {
+          address: string
+          business_name: string
+          contact_name: string
+          created_at?: string
+          email: string
+          id?: string
+          message?: string | null
+          phone: string
+          property_type: string
+          status?: string
+        }
+        Update: {
+          address?: string
+          business_name?: string
+          contact_name?: string
+          created_at?: string
+          email?: string
+          id?: string
+          message?: string | null
+          phone?: string
+          property_type?: string
+          status?: string
+        }
+        Relationships: []
+      }
       customers: {
         Row: {
           address: string | null
