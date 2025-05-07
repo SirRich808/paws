@@ -10,12 +10,11 @@ import Footer from "../components/Footer";
 
 const Index = () => {
   useEffect(() => {
+    // Scroll to top when component mounts
     window.scrollTo(0, 0);
     
-    // Preload the hero image
-    const heroImage = new Image();
-    heroImage.src = "/lovable-uploads/96adf5e6-14b4-4501-bae7-5a20da774c5b.png";
-    heroImage.fetchPriority = "high";
+    // We don't need to preload here anymore since we're using the link preload in the HTML head
+    // and the optimized loading in the Hero component directly
   }, []);
 
   return (
