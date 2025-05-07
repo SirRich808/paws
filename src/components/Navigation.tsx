@@ -1,11 +1,13 @@
 
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { Menu, X } from "lucide-react";
+import { Menu, X, User } from "lucide-react";
+import { useCustomer } from "../contexts/CustomerContext";
 
 const Navigation = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const { authState } = useCustomer();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -44,6 +46,23 @@ const Navigation = () => {
               >
                 (808) 123-4567
               </a>
+              {authState.isAuthenticated ? (
+                <Link 
+                  to="/profile" 
+                  className="flex items-center gap-2 text-white hover:text-ember transition-colors duration-300 hover:scale-105"
+                >
+                  <User size={20} />
+                  <span>My Account</span>
+                </Link>
+              ) : (
+                <Link 
+                  to="/login" 
+                  className="flex items-center gap-2 text-white hover:text-ember transition-colors duration-300 hover:scale-105"
+                >
+                  <User size={20} />
+                  <span>Login</span>
+                </Link>
+              )}
               <Link 
                 to="/pricing" 
                 className="btn-primary shadow-md transition-all duration-300 hover:shadow-lg hover:translate-y-[-2px]"
@@ -70,6 +89,25 @@ const Navigation = () => {
               <NavLinks mobile={true} closeMenu={() => setIsMenuOpen(false)} />
             </div>
             <div className="flex flex-col space-y-4 pt-4 border-t border-gray-700">
+              {authState.isAuthenticated ? (
+                <Link 
+                  to="/profile" 
+                  className="text-white hover:text-ember transition-colors flex items-center justify-center gap-2 py-2 hover:scale-105 duration-300"
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  <User size={20} />
+                  <span>My Account</span>
+                </Link>
+              ) : (
+                <Link 
+                  to="/login" 
+                  className="text-white hover:text-ember transition-colors flex items-center justify-center gap-2 py-2 hover:scale-105 duration-300"
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  <User size={20} />
+                  <span>Login</span>
+                </Link>
+              )}
               <a href="tel:8081234567" className="text-white hover:text-ember transition-colors flex items-center justify-center py-2 hover:scale-105 duration-300">
                 Call: (808) 123-4567
               </a>
@@ -112,17 +150,6 @@ const NavLinks = ({ mobile = false, closeMenu = () => {} }) => {
           {link.name}
         </Link>
       ))}
-      <Link
-        to="https://customer-portal-url.com"
-        target="_blank"
-        rel="noopener noreferrer"
-        className={`text-white hover:text-ember transition-all duration-300 hover:scale-105 ${
-          mobile ? "block py-2 text-center" : ""
-        }`}
-        onClick={closeMenu}
-      >
-        Customer Login
-      </Link>
     </>
   );
 };

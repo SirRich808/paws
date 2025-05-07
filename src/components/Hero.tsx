@@ -1,6 +1,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { useCustomer } from "../contexts/CustomerContext";
 
 // Tiny base64 placeholder (only ~70 bytes, much smaller than current placeholder)
 const TINY_PLACEHOLDER = "data:image/webp;base64,UklGRkoAAABXRUJQVlA4ID4AAADQAQCdASoQABAAPm0wl0ekI6IhMAgAsBIJbACdMoAD46XwPqN/fzyXov97vHfYACXyDmzuQ6qzlwh4kAAAAA==";
@@ -11,6 +12,7 @@ const Hero = () => {
   const imageRef = useRef(null);
   const mainImagePath = "/lovable-uploads/96adf5e6-14b4-4501-bae7-5a20da774c5b.png";
   const navigate = useNavigate();
+  const { authState } = useCustomer();
   
   // More efficient image loading with decode API
   useEffect(() => {
@@ -115,6 +117,19 @@ const Hero = () => {
                 <span className="ml-2">4.9</span>
               </div>
             </div>
+            {authState.isAuthenticated && (
+              <div className="mt-6">
+                <Link 
+                  to="/profile"
+                  className="text-white bg-amber-600 hover:bg-amber-700 px-6 py-2 rounded-full inline-flex items-center gap-2 transition-all duration-300"
+                >
+                  <span>My Account Dashboard</span>
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M10.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L12.586 11H5a1 1 0 110-2h7.586l-2.293-2.293a1 1 0 010-1.414z" clipRule="evenodd" />
+                  </svg>
+                </Link>
+              </div>
+            )}
           </div>
         </div>
       </div>
