@@ -2,7 +2,7 @@
 import React from "react";
 import { Link } from "react-router-dom";
 import { UseFormReturn } from "react-hook-form";
-import { BookingFormValues } from "./BookingTypes";
+import { BookingFormValues } from "@/types/booking";
 
 interface ReviewStepProps {
   form: UseFormReturn<BookingFormValues>;

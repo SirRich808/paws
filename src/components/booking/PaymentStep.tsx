@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { UseFormReturn } from "react-hook-form";
-import { BookingFormValues } from "./BookingTypes";
+import { BookingFormValues } from "@/types/booking";
 
 interface PaymentStepProps {
   form: UseFormReturn<BookingFormValues>;

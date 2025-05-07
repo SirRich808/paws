@@ -4,7 +4,7 @@ import { FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/comp
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { UseFormReturn } from "react-hook-form";
-import { BookingFormValues } from "./BookingTypes";
+import { BookingFormValues } from "@/types/booking";
 
 interface ScheduleStepProps {
   form: UseFormReturn<BookingFormValues>;

@@ -3,7 +3,7 @@ import React from "react";
 import { FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { UseFormReturn } from "react-hook-form";
-import { BookingFormValues } from "./BookingTypes";
+import { BookingFormValues } from "@/types/booking";
 
 interface CustomerInfoStepProps {
   form: UseFormReturn<BookingFormValues>;
