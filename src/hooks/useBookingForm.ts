@@ -135,9 +135,13 @@ export const useBookingForm = (planFromUrl: string, dogsFromUrl: string) => {
         // For non-authenticated users, first create a customer record
         const customerName = `${data.firstName} ${data.lastName}`;
         
+        // Generate a UUID for the customer ID
+        const newCustomerId = crypto.randomUUID();
+        
         const { data: newCustomer, error: customerError } = await supabase
           .from('customers')
           .insert({
+            id: newCustomerId,
             name: customerName,
             email: data.email,
             phone: data.phone,
