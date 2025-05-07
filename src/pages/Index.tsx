@@ -12,9 +12,6 @@ const Index = () => {
   useEffect(() => {
     // Scroll to top when component mounts
     window.scrollTo(0, 0);
-    
-    // We don't need to preload here anymore since we're using the link preload in the HTML head
-    // and the optimized loading in the Hero component directly
   }, []);
 
   return (
