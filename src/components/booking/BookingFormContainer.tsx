@@ -10,6 +10,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { Loader2 } from "lucide-react";
 
 import BookingProgressStepper from "./BookingProgressStepper";
 import CustomerInfoStep from "./CustomerInfoStep";
@@ -54,7 +55,7 @@ const BookingFormContainer: React.FC<BookingFormContainerProps> = ({
       </CardHeader>
       
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)}>
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
           <CardContent>
             {/* Step 1: Customer Information */}
             {currentStep === 1 && (
@@ -73,7 +74,7 @@ const BookingFormContainer: React.FC<BookingFormContainerProps> = ({
             
             {/* Step 4: Payment */}
             {currentStep === 4 && (
-              <PaymentStep form={form} calculatePrice={calculatePrice} />
+              <PaymentStep form={form} calculatePrice={calculatePrice} isLoading={isLoading} />
             )}
           </CardContent>
           
@@ -83,6 +84,7 @@ const BookingFormContainer: React.FC<BookingFormContainerProps> = ({
                 type="button"
                 variant="outline"
                 onClick={handlePrevStep}
+                disabled={isLoading}
               >
                 Back
               </Button>
@@ -103,7 +105,14 @@ const BookingFormContainer: React.FC<BookingFormContainerProps> = ({
                   className="bg-lava hover:bg-ember"
                   disabled={isLoading}
                 >
-                  {isLoading ? "Processing..." : `Pay $${calculatePrice().toFixed(2)}`}
+                  {isLoading ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Processing...
+                    </>
+                  ) : (
+                    `Pay $${calculatePrice().toFixed(2)}`
+                  )}
                 </Button>
               )}
             </div>
