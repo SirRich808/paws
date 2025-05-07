@@ -116,51 +116,69 @@ export const useBookingForm = (planFromUrl: string, dogsFromUrl: string) => {
       // Format the full address for storage
       const fullAddress = `${data.address}, ${data.city}, ${data.state} ${data.zipCode}`;
       
-      // Save booking to Supabase if user is authenticated
-      if (authState.isAuthenticated && authState.customer) {
-        // Get service plan ID based on selected plan frequency
-        const { data: servicePlan, error: planError } = await supabase
-          .from('service_plans')
-          .select('id')
-          .eq('frequency', data.servicePlan)
+      // Get service plan ID based on selected plan frequency
+      const { data: servicePlan, error: planError } = await supabase
+        .from('service_plans')
+        .select('id')
+        .eq('frequency', data.servicePlan)
+        .single();
+        
+      if (planError) {
+        console.error("Error fetching service plan:", planError);
+        throw new Error("Unable to find the selected service plan");
+      }
+        
+      // Prepare customer information for non-authenticated users
+      let customerId = authState.customer?.id;
+      
+      if (!customerId) {
+        // For non-authenticated users, first create a customer record
+        const customerName = `${data.firstName} ${data.lastName}`;
+        
+        const { data: newCustomer, error: customerError } = await supabase
+          .from('customers')
+          .insert({
+            name: customerName,
+            email: data.email,
+            phone: data.phone,
+            address: fullAddress
+          })
+          .select()
           .single();
-          
-        if (planError) {
-          console.error("Error fetching service plan:", planError);
-          throw new Error("Unable to find the selected service plan");
+        
+        if (customerError) {
+          console.error("Error creating customer:", customerError);
+          throw new Error("Failed to create customer record");
         }
-          
-        if (servicePlan) {
-          // Insert booking into Supabase
-          const { error: bookingError } = await supabase.from('bookings').insert({
-            customer_id: authState.customer.id,
-            service_plan_id: servicePlan.id,
-            num_dogs: parseInt(data.numDogs),
-            service_date: data.serviceDate,
-            service_time: data.serviceTime,
-            special_instructions: data.specialInstructions,
-            total_price: calculatePrice(),
-            address: fullAddress,
-            status: 'scheduled'
-          });
-          
-          if (bookingError) {
-            console.error("Error saving booking:", bookingError);
-            throw new Error("Failed to save your booking");
-          }
-          
-          // Update customer profile with address if not set
-          if (!authState.customer.address) {
-            await supabase.from('customers').update({
-              address: fullAddress,
-              phone: data.phone,
-              updated_at: new Date().toISOString()
-            }).eq('id', authState.customer.id);
-          }
-        }
-      } else {
-        // For non-authenticated users, we'll prompt them to create an account after booking
-        console.log("User not authenticated, continuing with booking without saving to database");
+        
+        customerId = newCustomer.id;
+      }
+
+      // Insert booking into Supabase with the appropriate customer ID
+      const { error: bookingError } = await supabase.from('bookings').insert({
+        customer_id: customerId,
+        service_plan_id: servicePlan.id,
+        num_dogs: parseInt(data.numDogs),
+        service_date: data.serviceDate,
+        service_time: data.serviceTime,
+        special_instructions: data.specialInstructions,
+        total_price: calculatePrice(),
+        address: fullAddress,
+        status: 'scheduled'
+      });
+      
+      if (bookingError) {
+        console.error("Error saving booking:", bookingError);
+        throw new Error("Failed to save your booking");
+      }
+      
+      // Update authenticated customer profile with address if not set
+      if (authState.isAuthenticated && authState.customer && !authState.customer.address) {
+        await supabase.from('customers').update({
+          address: fullAddress,
+          phone: data.phone,
+          updated_at: new Date().toISOString()
+        }).eq('id', authState.customer.id);
       }
       
       // Generate confirmation number with prefix AWS (Animal Waste Services) and random numbers
@@ -169,7 +187,7 @@ export const useBookingForm = (planFromUrl: string, dogsFromUrl: string) => {
       setBookingComplete(true);
       toast.success("Booking successful!");
       
-      // Track successful booking
+      // Log the successful booking
       console.log("Booking successful", {
         confirmationNumber: confirmNum,
         plan: data.servicePlan,
