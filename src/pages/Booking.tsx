@@ -8,6 +8,7 @@ import Footer from "../components/Footer";
 import BookingFormContainer from "../components/booking/BookingFormContainer";
 import BookingSuccess from "../components/booking/BookingSuccess";
 import { useCustomer } from "@/contexts/CustomerContext";
+import { useEffect } from "react";
 
 const Booking = () => {
   const [searchParams] = useSearchParams();

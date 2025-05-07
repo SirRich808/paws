@@ -74,7 +74,12 @@ const BookingFormContainer: React.FC<BookingFormContainerProps> = ({
             
             {/* Step 4: Payment */}
             {currentStep === 4 && (
-              <PaymentStep form={form} calculatePrice={calculatePrice} isLoading={isLoading} />
+              <PaymentStep 
+                form={form} 
+                calculatePrice={calculatePrice} 
+                isLoading={isLoading} 
+                onProcessPayment={onSubmit}
+              />
             )}
           </CardContent>
           
@@ -99,22 +104,7 @@ const BookingFormContainer: React.FC<BookingFormContainerProps> = ({
                 >
                   Continue
                 </Button>
-              ) : (
-                <Button
-                  type="submit"
-                  className="bg-lava hover:bg-ember"
-                  disabled={isLoading}
-                >
-                  {isLoading ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Processing...
-                    </>
-                  ) : (
-                    `Pay $${calculatePrice().toFixed(2)}`
-                  )}
-                </Button>
-              )}
+              ) : null}
             </div>
           </CardFooter>
         </form>

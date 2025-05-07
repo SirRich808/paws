@@ -5,7 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { BookingFormValues } from "@/types/booking";
 import { useCustomer } from "@/contexts/CustomerContext";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 
 export const useBookingForm = (planFromUrl: string, dogsFromUrl: string) => {
   const [currentStep, setCurrentStep] = useState(1);
@@ -14,6 +14,11 @@ export const useBookingForm = (planFromUrl: string, dogsFromUrl: string) => {
   const [confirmationNumber, setConfirmationNumber] = useState("");
   const { authState } = useCustomer();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  
+  // Check if returning from successful payment
+  const success = searchParams.get("success") === "true";
+  const sessionId = searchParams.get("session_id") || localStorage.getItem("stripe_session_id");
 
   // Initialize form with user data if available
   const form = useForm<BookingFormValues>({
@@ -35,6 +40,13 @@ export const useBookingForm = (planFromUrl: string, dogsFromUrl: string) => {
     mode: "onChange" // Validate on change for better user experience
   });
 
+  // Verify payment status if redirected from Stripe
+  useEffect(() => {
+    if (success && sessionId) {
+      verifyPaymentStatus(sessionId);
+    }
+  }, [success, sessionId]);
+
   // Update form when customer data changes
   useEffect(() => {
     if (authState.customer) {
@@ -50,6 +62,43 @@ export const useBookingForm = (planFromUrl: string, dogsFromUrl: string) => {
       }
     }
   }, [authState.customer, form]);
+
+  // Verify payment status with our edge function
+  const verifyPaymentStatus = async (stripeSessionId: string) => {
+    setIsLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('verify-payment', {
+        body: { sessionId: stripeSessionId }
+      });
+      
+      if (error) {
+        toast.error(`Payment verification failed: ${error.message}`);
+        setIsLoading(false);
+        return;
+      }
+      
+      if (data.success) {
+        // Payment was successful and booking was created
+        setConfirmationNumber(data.confirmationNumber);
+        setBookingComplete(true);
+        toast.success("Payment successful! Your booking is confirmed.");
+        
+        // Clear the session ID from localStorage
+        localStorage.removeItem("stripe_session_id");
+        
+        // Redirect to remove query params
+        navigate('/booking', { replace: true });
+      } else {
+        // Payment not completed yet
+        toast.error("Payment not completed. Please try again.");
+      }
+    } catch (error: any) {
+      console.error("Payment verification error:", error);
+      toast.error(error.message || "There was a problem verifying your payment");
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   // Calculate price based on number of dogs and service plan
   const calculatePrice = () => {
@@ -110,96 +159,12 @@ export const useBookingForm = (planFromUrl: string, dogsFromUrl: string) => {
 
   // Form submission handler
   const onSubmit = async (data: BookingFormValues) => {
+    // Payment is now handled by Stripe, this function is kept for compatibility
     setIsLoading(true);
     
     try {
-      // Format the full address for storage
-      const fullAddress = `${data.address}, ${data.city}, ${data.state} ${data.zipCode}`;
-      
-      // Get service plan ID based on selected plan frequency
-      const { data: servicePlan, error: planError } = await supabase
-        .from('service_plans')
-        .select('id')
-        .eq('frequency', data.servicePlan)
-        .single();
-        
-      if (planError) {
-        console.error("Error fetching service plan:", planError);
-        throw new Error("Unable to find the selected service plan");
-      }
-        
-      // Prepare customer information for non-authenticated users
-      let customerId = authState.customer?.id;
-      
-      if (!customerId) {
-        // For non-authenticated users, first create a customer record
-        const customerName = `${data.firstName} ${data.lastName}`;
-        
-        // Generate a UUID for the customer ID
-        const newCustomerId = crypto.randomUUID();
-        
-        const { data: newCustomer, error: customerError } = await supabase
-          .from('customers')
-          .insert({
-            id: newCustomerId,
-            name: customerName,
-            email: data.email,
-            phone: data.phone,
-            address: fullAddress
-          })
-          .select()
-          .single();
-        
-        if (customerError) {
-          console.error("Error creating customer:", customerError);
-          throw new Error("Failed to create customer record");
-        }
-        
-        customerId = newCustomer.id;
-      }
-
-      // Insert booking into Supabase with the appropriate customer ID
-      const { error: bookingError } = await supabase.from('bookings').insert({
-        customer_id: customerId,
-        service_plan_id: servicePlan.id,
-        num_dogs: parseInt(data.numDogs),
-        service_date: data.serviceDate,
-        service_time: data.serviceTime,
-        special_instructions: data.specialInstructions,
-        total_price: calculatePrice(),
-        address: fullAddress,
-        status: 'scheduled'
-      });
-      
-      if (bookingError) {
-        console.error("Error saving booking:", bookingError);
-        throw new Error("Failed to save your booking");
-      }
-      
-      // Update authenticated customer profile with address if not set
-      if (authState.isAuthenticated && authState.customer && !authState.customer.address) {
-        await supabase.from('customers').update({
-          address: fullAddress,
-          phone: data.phone,
-          updated_at: new Date().toISOString()
-        }).eq('id', authState.customer.id);
-      }
-      
-      // Generate confirmation number with prefix AWS (Animal Waste Services) and random numbers
-      const confirmNum = `AWS-${Math.floor(10000 + Math.random() * 90000)}`;
-      setConfirmationNumber(confirmNum);
-      setBookingComplete(true);
-      toast.success("Booking successful!");
-      
-      // Log the successful booking
-      console.log("Booking successful", {
-        confirmationNumber: confirmNum,
-        plan: data.servicePlan,
-        dogs: data.numDogs,
-        date: data.serviceDate,
-        authenticated: authState.isAuthenticated
-      });
-      
+      // This is now handled by the payment verification function
+      console.log("Submission will be handled by Stripe");
     } catch (error: any) {
       console.error("Booking submission error:", error);
       toast.error(error.message || "There was a problem processing your booking");

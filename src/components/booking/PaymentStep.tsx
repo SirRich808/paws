@@ -6,95 +6,66 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { UseFormReturn } from "react-hook-form";
 import { BookingFormValues } from "@/types/booking";
-import { Loader2, CheckCircle, AlertCircle } from "lucide-react";
+import { Loader2, CheckCircle, AlertCircle, CreditCard, LockKeyhole } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 interface PaymentStepProps {
   form: UseFormReturn<BookingFormValues>;
   calculatePrice: () => number;
   isLoading?: boolean;
+  onProcessPayment: () => void;
 }
 
-const PaymentStep: React.FC<PaymentStepProps> = ({ form, calculatePrice, isLoading }) => {
-  const [cardNumber, setCardNumber] = useState("");
-  const [expiration, setExpiration] = useState("");
-  const [cvc, setCvc] = useState("");
-  const [nameOnCard, setNameOnCard] = useState("");
-  const [validationState, setValidationState] = useState({
-    cardNumber: { valid: false, message: "" },
-    expiration: { valid: false, message: "" },
-    cvc: { valid: false, message: "" },
-    nameOnCard: { valid: false, message: "" }
-  });
+const PaymentStep: React.FC<PaymentStepProps> = ({ 
+  form, 
+  calculatePrice, 
+  isLoading,
+  onProcessPayment 
+}) => {
   const [activeTab, setActiveTab] = useState("card");
-
-  // Format card number as user types (4 digits grouped)
-  const handleCardNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value.replace(/\D/g, '').substring(0, 16);
-    const formattedValue = value.replace(/(\d{4})(?=\d)/g, '$1 ').trim();
-    setCardNumber(formattedValue);
-    
-    setValidationState(prev => ({
-      ...prev, 
-      cardNumber: {
-        valid: value.length === 16,
-        message: value.length < 16 && value.length > 0 ? "Card number must be 16 digits" : ""
+  const [processingPayment, setProcessingPayment] = useState(false);
+  
+  // Handle payment submission
+  const handlePaymentSubmit = async () => {
+    try {
+      setProcessingPayment(true);
+      
+      // Get form values to pass to Stripe
+      const formValues = form.getValues();
+      
+      // Call the Stripe checkout function
+      const { data, error } = await supabase.functions.invoke("create-checkout", {
+        body: { 
+          bookingData: formValues,
+          totalPrice: calculatePrice()
+        }
+      });
+      
+      if (error) {
+        toast.error("Payment processing failed: " + error.message);
+        setProcessingPayment(false);
+        return;
       }
-    }));
-  };
-
-  // Format expiration date as MM/YY
-  const handleExpirationChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    let value = e.target.value.replace(/\D/g, '');
-    
-    if (value.length > 2) {
-      value = value.substring(0, 2) + '/' + value.substring(2, 4);
+      
+      if (data?.url) {
+        // Store session ID in localStorage for verification after redirect
+        if (data.sessionId) {
+          localStorage.setItem("stripe_session_id", data.sessionId);
+        }
+        
+        // Redirect to Stripe Checkout
+        window.location.href = data.url;
+      } else {
+        toast.error("Payment processing failed. Please try again.");
+        setProcessingPayment(false);
+      }
+    } catch (error) {
+      console.error("Payment error:", error);
+      toast.error("Payment processing failed. Please try again.");
+      setProcessingPayment(false);
     }
-    
-    setExpiration(value);
-    
-    // Basic validation
-    const isValid = /^\d{2}\/\d{2}$/.test(value);
-    setValidationState(prev => ({
-      ...prev, 
-      expiration: {
-        valid: isValid,
-        message: value && !isValid ? "Use format MM/YY" : ""
-      }
-    }));
   };
-
-  const handleCvcChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value.replace(/\D/g, '').substring(0, 3);
-    setCvc(value);
-    
-    setValidationState(prev => ({
-      ...prev, 
-      cvc: {
-        valid: value.length === 3,
-        message: value.length < 3 && value.length > 0 ? "CVC must be 3 digits" : ""
-      }
-    }));
-  };
-
-  const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value;
-    setNameOnCard(value);
-    
-    setValidationState(prev => ({
-      ...prev, 
-      nameOnCard: {
-        valid: value.length > 2,
-        message: value && value.length < 3 ? "Please enter a valid name" : ""
-      }
-    }));
-  };
-
-  // Overall form validation
-  const isCardFormValid = activeTab === "card" ? 
-    validationState.cardNumber.valid && 
-    validationState.expiration.valid && 
-    validationState.cvc.valid && 
-    validationState.nameOnCard.valid : true;
 
   return (
     <div className="space-y-6">
@@ -121,97 +92,58 @@ const PaymentStep: React.FC<PaymentStepProps> = ({ form, calculatePrice, isLoadi
           </TabsList>
           
           <TabsContent value="card" className="space-y-4 pt-4">
-            <div className="grid grid-cols-1 gap-4">
-              <div>
-                <Label htmlFor="cardNumber" className="flex items-center justify-between">
-                  Card Number
-                  {cardNumber && (
-                    validationState.cardNumber.valid ? 
-                      <CheckCircle className="h-4 w-4 text-green-500" /> : 
-                      <span className="text-xs text-red-500">{validationState.cardNumber.message}</span>
+            <div className="flex items-center justify-center p-8 border rounded-md border-gray-200 bg-gray-50">
+              <div className="text-center">
+                <CreditCard className="h-10 w-10 mx-auto mb-4 text-lava" />
+                <h3 className="text-lg font-medium mb-2">Secure Card Payment</h3>
+                <p className="text-muted-foreground mb-4">
+                  You'll be redirected to our secure payment processor to complete your payment
+                </p>
+                <Button
+                  onClick={handlePaymentSubmit}
+                  disabled={processingPayment}
+                  className="bg-lava hover:bg-ember"
+                >
+                  {processingPayment ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Processing...
+                    </>
+                  ) : (
+                    <>
+                      Pay ${calculatePrice().toFixed(2)} Securely
+                    </>
                   )}
-                </Label>
-                <Input 
-                  id="cardNumber" 
-                  placeholder="4242 4242 4242 4242" 
-                  value={cardNumber}
-                  onChange={handleCardNumberChange}
-                  className={cardNumber && !validationState.cardNumber.valid ? "border-red-300" : ""}
-                />
-              </div>
-              
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="expiration" className="flex items-center justify-between">
-                    Expiration
-                    {expiration && (
-                      validationState.expiration.valid ? 
-                        <CheckCircle className="h-4 w-4 text-green-500" /> : 
-                        <span className="text-xs text-red-500">{validationState.expiration.message}</span>
-                    )}
-                  </Label>
-                  <Input 
-                    id="expiration" 
-                    placeholder="MM/YY" 
-                    value={expiration}
-                    onChange={handleExpirationChange}
-                    className={expiration && !validationState.expiration.valid ? "border-red-300" : ""}
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="cvc" className="flex items-center justify-between">
-                    CVC
-                    {cvc && (
-                      validationState.cvc.valid ? 
-                        <CheckCircle className="h-4 w-4 text-green-500" /> : 
-                        <span className="text-xs text-red-500">{validationState.cvc.message}</span>
-                    )}
-                  </Label>
-                  <Input 
-                    id="cvc" 
-                    placeholder="123" 
-                    value={cvc}
-                    onChange={handleCvcChange}
-                    className={cvc && !validationState.cvc.valid ? "border-red-300" : ""}
-                    maxLength={3}
-                  />
-                </div>
-              </div>
-              
-              <div>
-                <Label htmlFor="nameOnCard" className="flex items-center justify-between">
-                  Name on Card
-                  {nameOnCard && (
-                    validationState.nameOnCard.valid ? 
-                      <CheckCircle className="h-4 w-4 text-green-500" /> : 
-                      <span className="text-xs text-red-500">{validationState.nameOnCard.message}</span>
-                  )}
-                </Label>
-                <Input 
-                  id="nameOnCard" 
-                  placeholder="John Doe" 
-                  value={nameOnCard}
-                  onChange={handleNameChange}
-                  className={nameOnCard && !validationState.nameOnCard.valid ? "border-red-300" : ""}
-                />
+                </Button>
               </div>
             </div>
           </TabsContent>
           
           <TabsContent value="paypal" className="space-y-4 py-4">
-            <div className="text-center">
+            <div className="text-center p-8 border rounded-md border-gray-200 bg-gray-50">
+              <svg viewBox="0 0 24 24" className="h-10 w-10 mx-auto mb-4 text-blue-600">
+                <path d="M7.016 20.146h-3.06c-.414 0-.75-.336-.75-.75v-7.396a.75.75 0 1 1 1.5 0v6.646h2.31a.75.75 0 0 1 0 1.5zm6.144 0h-3.06a.75.75 0 0 1 0-1.5h2.31V7.75a.75.75 0 0 1 1.5 0v11.646a.75.75 0 0 1-.75.75zm6.144 0h-3.06a.75.75 0 0 1-.75-.75V7.75a.75.75 0 0 1 1.5 0v10.646h2.31a.75.75 0 0 1 0 1.5zM3.03 8.708a.75.75 0 0 1 .672-.42h4.264a.75.75 0 0 1 0 1.5H3.702a.75.75 0 0 1-.672-1.08zm9.974.75c0-.414.336-.75.75-.75h7.188a.75.75 0 0 1 0 1.5h-7.188a.75.75 0 0 1-.75-.75zm-3.83-5.302a.75.75 0 0 1 .672-.42h4.264a.75.75 0 0 1 0 1.5H9.846a.75.75 0 0 1-.672-1.08z" fill="currentColor"/>
+              </svg>
+              <h3 className="text-lg font-medium mb-2">Pay with PayPal</h3>
+              <p className="text-muted-foreground mb-4">
+                You'll be redirected to PayPal to complete your payment securely
+              </p>
               <Button 
-                type="button" 
+                onClick={handlePaymentSubmit}
+                disabled={processingPayment}
                 className="bg-blue-600 hover:bg-blue-700"
               >
-                <svg viewBox="0 0 24 24" className="h-5 w-5 mr-2" fill="#ffffff">
-                  <path d="M7.016 20.146h-3.06c-.414 0-.75-.336-.75-.75v-7.396a.75.75 0 1 1 1.5 0v6.646h2.31a.75.75 0 0 1 0 1.5zm6.144 0h-3.06a.75.75 0 0 1 0-1.5h2.31V7.75a.75.75 0 0 1 1.5 0v11.646a.75.75 0 0 1-.75.75zm6.144 0h-3.06a.75.75 0 0 1-.75-.75V7.75a.75.75 0 0 1 1.5 0v10.646h2.31a.75.75 0 0 1 0 1.5zM3.03 8.708a.75.75 0 0 1 .672-.42h4.264a.75.75 0 0 1 0 1.5H3.702a.75.75 0 0 1-.672-1.08zm9.974.75c0-.414.336-.75.75-.75h7.188a.75.75 0 0 1 0 1.5h-7.188a.75.75 0 0 1-.75-.75zm-3.83-5.302a.75.75 0 0 1 .672-.42h4.264a.75.75 0 0 1 0 1.5H9.846a.75.75 0 0 1-.672-1.08z" />
-                </svg>
-                Pay with PayPal
+                {processingPayment ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Processing...
+                  </>
+                ) : (
+                  <>
+                    Pay ${calculatePrice().toFixed(2)} with PayPal
+                  </>
+                )}
               </Button>
-              <p className="text-sm text-muted-foreground mt-4">
-                You'll be redirected to PayPal to complete your payment securely.
-              </p>
             </div>
           </TabsContent>
         </Tabs>
@@ -219,12 +151,7 @@ const PaymentStep: React.FC<PaymentStepProps> = ({ form, calculatePrice, isLoadi
       
       <div className="text-sm text-muted-foreground space-y-2 pt-4 border-t mt-4">
         <div className="flex items-center gap-2">
-          <svg viewBox="0 0 24 24" className="h-4 w-4" fill="currentColor">
-            <path d="M19.5,8.25H4.5a.75.75,0,0,1,0-1.5h15a.75.75,0,0,1,0,1.5Z"/>
-            <path d="M16.5,12.75H7.5a.75.75,0,0,1,0-1.5h9a.75.75,0,0,1,0,1.5Z"/>
-            <path d="M13.5,17.25h-3a.75.75,0,0,1,0-1.5h3a.75.75,0,0,1,0,1.5Z"/>
-            <path d="M12,22A10,10,0,1,1,22,12,10.011,10.011,0,0,1,12,22ZM12,3.5A8.5,8.5,0,1,0,20.5,12,8.51,8.51,0,0,0,12,3.5Z"/>
-          </svg>
+          <LockKeyhole className="h-4 w-4" />
           <p>Your payment information is secure and encrypted</p>
         </div>
         <div className="flex items-center gap-2">
