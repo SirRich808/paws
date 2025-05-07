@@ -15,7 +15,7 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
   useEffect(() => {
     if (!authState.isLoading && !authState.isAuthenticated) {
       toast.error("Please log in to access this page");
-      navigate("/login");
+      navigate("/login?redirect=" + encodeURIComponent(window.location.pathname));
     }
   }, [authState.isLoading, authState.isAuthenticated, navigate]);
 
