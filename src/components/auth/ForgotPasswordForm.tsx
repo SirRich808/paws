@@ -1,13 +1,13 @@
 
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useForm } from "react-hook-form";
 import { Loader2, ArrowLeft } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
+import { useCustomer } from "@/contexts/CustomerContext";
 
 type ForgotPasswordFormValues = {
   email: string;
@@ -16,7 +16,7 @@ type ForgotPasswordFormValues = {
 const ForgotPasswordForm = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
-  const navigate = useNavigate();
+  const { resetPassword } = useCustomer();
 
   const form = useForm<ForgotPasswordFormValues>({
     defaultValues: {
@@ -28,14 +28,7 @@ const ForgotPasswordForm = () => {
     setIsLoading(true);
 
     try {
-      const { error } = await supabase.auth.resetPasswordForEmail(data.email, {
-        redirectTo: `${window.location.origin}/reset-password`,
-      });
-
-      if (error) {
-        throw error;
-      }
-
+      await resetPassword(data.email);
       setIsSubmitted(true);
       toast.success("Password reset email sent. Please check your inbox.");
     } catch (error: any) {

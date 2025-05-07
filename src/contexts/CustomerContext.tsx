@@ -26,6 +26,7 @@ type CustomerContextType = {
   register: (email: string, password: string, name: string) => Promise<void>;
   logout: () => Promise<void>;
   updateProfile: (data: Partial<Customer>) => Promise<void>;
+  resetPassword: (email: string) => Promise<void>;
 };
 
 const defaultAuthState: AuthState = {
@@ -85,7 +86,47 @@ export const CustomerProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         .single();
 
       if (error) {
-        throw error;
+        console.error("Error fetching customer profile:", error);
+        
+        // Check if error is because the profile doesn't exist
+        if (error.code === 'PGRST116') { // No rows returned
+          // Create new profile if it doesn't exist
+          const newCustomer = {
+            id: session.user.id,
+            email: session.user.email || '',
+            name: session.user.user_metadata?.name || session.user.email?.split('@')[0] || '',
+            address: '',
+            phone: '',
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString()
+          };
+          
+          const { error: insertError } = await supabase
+            .from('customers')
+            .insert([newCustomer]);
+            
+          if (insertError) {
+            console.error("Failed to create customer profile:", insertError);
+            throw insertError;
+          }
+          
+          setAuthState({
+            isAuthenticated: true,
+            customer: {
+              id: newCustomer.id,
+              email: newCustomer.email,
+              name: newCustomer.name,
+              address: newCustomer.address,
+              phone: newCustomer.phone,
+              createdAt: newCustomer.created_at
+            },
+            isLoading: false,
+            session: session,
+          });
+          return;
+        } else {
+          throw error;
+        }
       }
 
       if (data) {
@@ -102,25 +143,9 @@ export const CustomerProvider: React.FC<{ children: React.ReactNode }> = ({ chil
           isLoading: false,
           session: session,
         });
-      } else {
-        // If no profile exists yet but user is authenticated
-        // (Could happen if trigger to create profile failed)
-        setAuthState({
-          isAuthenticated: true,
-          customer: {
-            id: session.user.id,
-            email: session.user.email || '',
-            name: session.user.email?.split('@')[0] || '',
-            address: '',
-            phone: '',
-            createdAt: new Date().toISOString(),
-          },
-          isLoading: false,
-          session: session,
-        });
       }
     } catch (error) {
-      console.error("Error fetching customer profile:", error);
+      console.error("Error in customer profile handling:", error);
       // Set basic profile from session
       setAuthState({
         isAuthenticated: true,
@@ -152,7 +177,15 @@ export const CustomerProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       toast.success("Login successful!");
     } catch (error: any) {
       console.error("Login error:", error);
-      toast.error(error.message || "Failed to login. Please check your credentials.");
+      
+      // More user-friendly error messages
+      if (error.message.includes("Invalid login credentials")) {
+        toast.error("Invalid email or password. Please try again.");
+      } else if (error.message.includes("Email not confirmed")) {
+        toast.error("Please verify your email address before logging in.");
+      } else {
+        toast.error(error.message || "Failed to login. Please check your credentials.");
+      }
       throw error;
     }
   };
@@ -174,12 +207,38 @@ export const CustomerProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         throw error;
       }
 
-      toast.success("Registration successful!");
-      
-      // The handle_new_user trigger will create the customer record in the customers table
+      // Check if email confirmation is required
+      if (data?.user && data.session) {
+        toast.success("Registration successful!");
+      } else {
+        toast.success("Registration successful! Please check your email to verify your account.");
+      }
     } catch (error: any) {
       console.error("Registration error:", error);
-      toast.error(error.message || "Failed to register. Please try again.");
+      
+      // More descriptive error messages
+      if (error.message.includes("already registered")) {
+        toast.error("This email is already registered. Please log in instead.");
+      } else {
+        toast.error(error.message || "Failed to register. Please try again.");
+      }
+      throw error;
+    }
+  };
+
+  const resetPassword = async (email: string) => {
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/reset-password`,
+      });
+
+      if (error) {
+        throw error;
+      }
+      
+      return Promise.resolve();
+    } catch (error: any) {
+      console.error("Reset password error:", error);
       throw error;
     }
   };
@@ -201,7 +260,7 @@ export const CustomerProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const updateProfile = async (data: Partial<Customer>) => {
     if (!authState.customer) {
       toast.error("You must be logged in to update your profile");
-      return;
+      return Promise.reject("Not authenticated");
     }
 
     try {
@@ -237,7 +296,14 @@ export const CustomerProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   };
 
   return (
-    <CustomerContext.Provider value={{ authState, login, register, logout, updateProfile }}>
+    <CustomerContext.Provider value={{ 
+      authState, 
+      login, 
+      register, 
+      logout, 
+      updateProfile,
+      resetPassword 
+    }}>
       {children}
     </CustomerContext.Provider>
   );
