@@ -1,14 +1,12 @@
 
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { UseFormReturn } from "react-hook-form";
 import { BookingFormValues } from "@/types/booking";
-import { Loader2, CheckCircle, AlertCircle, CreditCard, LockKeyhole } from "lucide-react";
+import { Loader2, CreditCard, LockKeyhole } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 interface PaymentStepProps {
   form: UseFormReturn<BookingFormValues>;

@@ -78,7 +78,7 @@ const BookingFormContainer: React.FC<BookingFormContainerProps> = ({
                 form={form} 
                 calculatePrice={calculatePrice} 
                 isLoading={isLoading} 
-                onProcessPayment={onSubmit}
+                onProcessPayment={() => onSubmit(form.getValues())}
               />
             )}
           </CardContent>
