@@ -1,10 +1,11 @@
 
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useToast } from "../hooks/use-toast";
 
 const Plans = () => {
   const { toast } = useToast();
+  const navigate = useNavigate();
   const [frequency, setFrequency] = useState("weekly");
   
   const plans = {
@@ -112,13 +113,12 @@ const Plans = () => {
     ]
   };
   
-  const handleCheckout = (priceId: string) => {
-    // In a real implementation, this would redirect to Stripe
-    toast({
-      title: "Redirecting to checkout",
-      description: `Selected plan: ${priceId}`,
-    });
-    console.log(`Checkout with price ID: ${priceId}`);
+  const handleCheckout = (priceId: string, price: number, dogCount: string) => {
+    // Extract the plan type and dog count from the priceId
+    const planType = priceId.includes("weekly") ? "weekly" : "biweekly";
+    
+    // Navigate to booking page with plan information
+    navigate(`/booking?plan=${planType}&dogs=${dogCount}&price=${price}`);
   };
   
   return (
@@ -190,7 +190,7 @@ const Plans = () => {
                 </ul>
                 
                 <button
-                  onClick={() => handleCheckout(plan.priceId)}
+                  onClick={() => handleCheckout(plan.priceId, plan.price, plan.title.split(" ")[0])}
                   className={`w-full py-3 rounded-lg font-medium ${
                     plan.popular 
                       ? "bg-ember text-white hover:bg-opacity-90" 

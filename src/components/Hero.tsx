@@ -1,6 +1,6 @@
 
 import { useState, useEffect, useRef } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 // Tiny base64 placeholder (only ~70 bytes, much smaller than current placeholder)
 const TINY_PLACEHOLDER = "data:image/webp;base64,UklGRkoAAABXRUJQVlA4ID4AAADQAQCdASoQABAAPm0wl0ekI6IhMAgAsBIJbACdMoAD46XwPqN/fzyXov97vHfYACXyDmzuQ6qzlwh4kAAAAA==";
@@ -10,6 +10,7 @@ const Hero = () => {
   const [decodedImage, setDecodedImage] = useState(false);
   const imageRef = useRef(null);
   const mainImagePath = "/lovable-uploads/96adf5e6-14b4-4501-bae7-5a20da774c5b.png";
+  const navigate = useNavigate();
   
   // More efficient image loading with decode API
   useEffect(() => {
@@ -34,6 +35,11 @@ const Hero = () => {
     img.src = `${mainImagePath}?v=${Date.now()}`;
     img.fetchPriority = "high";
   }, []);
+
+  const handleStartService = () => {
+    // Navigate to booking page with default weekly service for 1 dog
+    navigate('/booking?plan=weekly&dogs=1&price=19.99');
+  };
 
   return (
     <div className="relative min-h-screen flex items-center justify-center overflow-hidden">
@@ -78,9 +84,12 @@ const Hero = () => {
           </p>
           
           <div className="flex flex-col sm:flex-row justify-center gap-4 mb-12">
-            <Link to="/pricing" className="btn-primary text-lg">
+            <button 
+              onClick={handleStartService}
+              className="btn-primary text-lg"
+            >
               Start Weekly Service
-            </Link>
+            </button>
             <a href="tel:8081234567" className="btn-secondary text-lg">
               Call Us: (808) 123-4567
             </a>
