@@ -1,18 +1,17 @@
 
 import { useState, useEffect } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { useCustomer } from "../contexts/CustomerContext";
 import { toast } from "sonner";
 import Navigation from "../components/Navigation";
 import Footer from "../components/Footer";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { BookingHistory } from "@/components/BookingHistory";
-import { Calendar, LogOut, User, MapPin, Phone, Mail } from "lucide-react";
+import { Calendar, User } from "lucide-react";
+import ProfileSidebar from "@/components/ProfileSidebar";
+import SubscriptionTab from "@/components/SubscriptionTab";
+import AccountSettingsTab from "@/components/AccountSettingsTab";
 
 const Profile = () => {
   const { authState, logout, updateProfile } = useCustomer();
@@ -94,15 +93,6 @@ const Profile = () => {
     }
   ];
 
-  // Get initials for avatar
-  const getInitials = (name: string) => {
-    return name
-      .split(" ")
-      .map((n) => n[0])
-      .join("")
-      .toUpperCase();
-  };
-
   if (authState.isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -120,46 +110,13 @@ const Profile = () => {
           <div className="grid gap-8 lg:grid-cols-12">
             {/* Profile sidebar */}
             <div className="lg:col-span-3">
-              <div className="rounded-lg border bg-card shadow-sm p-6 space-y-6">
-                <div className="flex flex-col items-center space-y-4">
-                  <Avatar className="h-24 w-24 border-2 border-primary">
-                    <AvatarFallback className="text-2xl bg-lava text-white">
-                      {getInitials(name || email.split('@')[0])}
-                    </AvatarFallback>
-                  </Avatar>
-                  <div className="text-center">
-                    <h2 className="text-xl font-semibold">{name || email.split('@')[0]}</h2>
-                    <p className="text-sm text-muted-foreground">{email}</p>
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <div className="flex items-center space-x-2 text-sm">
-                    <Mail size={16} />
-                    <span>{email}</span>
-                  </div>
-                  {phone && (
-                    <div className="flex items-center space-x-2 text-sm">
-                      <Phone size={16} />
-                      <span>{phone}</span>
-                    </div>
-                  )}
-                  {address && (
-                    <div className="flex items-center space-x-2 text-sm">
-                      <MapPin size={16} />
-                      <span>{address}</span>
-                    </div>
-                  )}
-                </div>
-
-                <Button
-                  variant="outline" 
-                  className="w-full flex items-center gap-2" 
-                  onClick={handleLogout}
-                >
-                  <LogOut size={16} /> Logout
-                </Button>
-              </div>
+              <ProfileSidebar 
+                name={name}
+                email={email}
+                phone={phone}
+                address={address}
+                onLogout={handleLogout}
+              />
             </div>
 
             {/* Main content */}
@@ -194,147 +151,25 @@ const Profile = () => {
 
                 {/* Subscription Tab */}
                 <TabsContent value="subscription">
-                  <Card>
-                    <CardHeader>
-                      <CardTitle>My Subscription</CardTitle>
-                      <CardDescription>
-                        Manage your current service subscription
-                      </CardDescription>
-                    </CardHeader>
-                    <CardContent className="space-y-6">
-                      <div className="rounded-md border p-6 bg-green-50 border-green-200">
-                        <div className="flex justify-between items-center mb-4">
-                          <div>
-                            <h3 className="text-lg font-semibold">Weekly Service - 1 Dog</h3>
-                            <p className="text-sm text-muted-foreground">Billed weekly</p>
-                          </div>
-                          <span className="text-lg font-semibold">$19.99/week</span>
-                        </div>
-                        <div className="space-y-2">
-                          <div className="flex justify-between text-sm">
-                            <span>Next service date:</span>
-                            <span>May 15, 2025</span>
-                          </div>
-                          <div className="flex justify-between text-sm">
-                            <span>Service address:</span>
-                            <span>{address || "Not specified"}</span>
-                          </div>
-                          <div className="flex justify-between text-sm">
-                            <span>Active since:</span>
-                            <span>May 1, 2025</span>
-                          </div>
-                        </div>
-                        <div className="mt-6 flex gap-4">
-                          <Button variant="outline" size="sm">
-                            Change plan
-                          </Button>
-                          <Button variant="outline" size="sm" className="text-red-600 hover:bg-red-50">
-                            Cancel subscription
-                          </Button>
-                        </div>
-                      </div>
-                      
-                      <div className="grid gap-4">
-                        <div className="flex justify-between items-center border-b pb-4">
-                          <h4 className="font-medium">Payment Method</h4>
-                          <Button variant="outline" size="sm">Update</Button>
-                        </div>
-                        <div className="flex items-center gap-3">
-                          <div className="h-12 w-16 rounded border flex items-center justify-center bg-white">
-                            <span className="font-medium">VISA</span>
-                          </div>
-                          <div>
-                            <p className="font-medium">Visa ending in 4242</p>
-                            <p className="text-sm text-muted-foreground">Expires 12/28</p>
-                          </div>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
+                  <SubscriptionTab address={address} />
                 </TabsContent>
 
                 {/* Account Settings Tab */}
                 <TabsContent value="account">
-                  <Card>
-                    <CardHeader>
-                      <CardTitle>Account Settings</CardTitle>
-                      <CardDescription>
-                        Update your account information
-                      </CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                      <form onSubmit={handleUpdateProfile} className="space-y-6">
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                          <div className="space-y-2">
-                            <Label htmlFor="name">Full Name</Label>
-                            <Input
-                              id="name"
-                              value={name}
-                              onChange={(e) => setName(e.target.value)}
-                              disabled={!isEditing}
-                            />
-                          </div>
-                          <div className="space-y-2">
-                            <Label htmlFor="email">Email</Label>
-                            <Input
-                              id="email"
-                              type="email"
-                              value={email}
-                              onChange={(e) => setEmail(e.target.value)}
-                              disabled={!isEditing}
-                            />
-                          </div>
-                          <div className="space-y-2">
-                            <Label htmlFor="phone">Phone Number</Label>
-                            <Input
-                              id="phone"
-                              value={phone}
-                              onChange={(e) => setPhone(e.target.value)}
-                              disabled={!isEditing}
-                            />
-                          </div>
-                          <div className="space-y-2">
-                            <Label htmlFor="address">Service Address</Label>
-                            <Input
-                              id="address"
-                              value={address}
-                              onChange={(e) => setAddress(e.target.value)}
-                              disabled={!isEditing}
-                            />
-                          </div>
-                        </div>
-
-                        <div className="flex justify-end gap-4">
-                          {isEditing ? (
-                            <>
-                              <Button
-                                type="button"
-                                variant="outline"
-                                onClick={() => setIsEditing(false)}
-                              >
-                                Cancel
-                              </Button>
-                              <Button 
-                                type="submit"
-                                disabled={isSubmitting}
-                                className="bg-lava hover:bg-ember"
-                              >
-                                {isSubmitting ? "Saving..." : "Save Changes"}
-                              </Button>
-                            </>
-                          ) : (
-                            <Button 
-                              type="button"
-                              onClick={() => setIsEditing(true)}
-                              className="bg-lava hover:bg-ember"
-                            >
-                              Edit Profile
-                            </Button>
-                          )}
-                        </div>
-                      </form>
-                    </CardContent>
-                  </Card>
+                  <AccountSettingsTab 
+                    name={name}
+                    email={email}
+                    phone={phone}
+                    address={address}
+                    isEditing={isEditing}
+                    isSubmitting={isSubmitting}
+                    setName={setName}
+                    setEmail={setEmail}
+                    setPhone={setPhone}
+                    setAddress={setAddress}
+                    setIsEditing={setIsEditing}
+                    handleUpdateProfile={handleUpdateProfile}
+                  />
                 </TabsContent>
               </Tabs>
             </div>
