@@ -12,6 +12,16 @@ import { Calendar, User } from "lucide-react";
 import ProfileSidebar from "@/components/ProfileSidebar";
 import SubscriptionTab from "@/components/SubscriptionTab";
 import AccountSettingsTab from "@/components/AccountSettingsTab";
+import { supabase } from "@/integrations/supabase/client";
+import { Loader2 } from "lucide-react";
+
+export interface BookingData {
+  id: string;
+  service: string;
+  date: string;
+  time: string;
+  status: "upcoming" | "completed" | "cancelled";
+}
 
 const Profile = () => {
   const { authState, logout, updateProfile } = useCustomer();
@@ -23,6 +33,8 @@ const Profile = () => {
   const [phone, setPhone] = useState(authState.customer?.phone || "");
   const [isEditing, setIsEditing] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [bookings, setBookings] = useState<BookingData[]>([]);
+  const [isLoadingBookings, setIsLoadingBookings] = useState(false);
 
   // Redirect if not authenticated
   useEffect(() => {
@@ -40,6 +52,50 @@ const Profile = () => {
       setPhone(authState.customer.phone || "");
     }
   }, [authState.customer]);
+
+  // Fetch real bookings data
+  useEffect(() => {
+    const fetchBookings = async () => {
+      if (!authState.customer?.id) return;
+      
+      setIsLoadingBookings(true);
+      try {
+        const { data, error } = await supabase
+          .from('bookings')
+          .select(`
+            id,
+            service_date,
+            service_time,
+            status,
+            service_plan_id,
+            service_plans(name)
+          `)
+          .eq('customer_id', authState.customer.id)
+          .order('service_date', { ascending: false });
+          
+        if (error) throw error;
+        
+        const formattedBookings = data.map(booking => ({
+          id: booking.id,
+          service: booking.service_plans?.name || 'Pet Waste Service',
+          date: booking.service_date,
+          time: booking.service_time,
+          status: booking.status as "upcoming" | "completed" | "cancelled"
+        }));
+        
+        setBookings(formattedBookings);
+      } catch (error) {
+        console.error("Error fetching bookings:", error);
+        toast.error("Failed to load booking history");
+      } finally {
+        setIsLoadingBookings(false);
+      }
+    };
+
+    if (authState.isAuthenticated) {
+      fetchBookings();
+    }
+  }, [authState.isAuthenticated, authState.customer?.id]);
 
   const handleLogout = () => {
     logout();
@@ -67,31 +123,6 @@ const Profile = () => {
       setIsSubmitting(false);
     }
   };
-
-  // Mock bookings data - in a real app, this would come from an API
-  const mockBookings = [
-    {
-      id: "booking_1",
-      service: "Weekly Service - 1 Dog",
-      date: "2025-05-15",
-      time: "10:00 AM",
-      status: "upcoming" as const
-    },
-    {
-      id: "booking_2",
-      service: "Weekly Service - 1 Dog",
-      date: "2025-05-08",
-      time: "10:00 AM",
-      status: "completed" as const
-    },
-    {
-      id: "booking_3",
-      service: "Weekly Service - 1 Dog",
-      date: "2025-05-01",
-      time: "10:00 AM",
-      status: "completed" as const
-    }
-  ];
 
   if (authState.isLoading) {
     return (
@@ -144,7 +175,20 @@ const Profile = () => {
                       </CardDescription>
                     </CardHeader>
                     <CardContent>
-                      <BookingHistory bookings={mockBookings} />
+                      {isLoadingBookings ? (
+                        <div className="flex justify-center py-8">
+                          <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+                        </div>
+                      ) : bookings.length === 0 ? (
+                        <div className="text-center py-8 text-muted-foreground">
+                          <p className="mb-4">You don't have any bookings yet</p>
+                          <Button onClick={() => navigate("/booking")} className="bg-lava hover:bg-ember">
+                            Book a Service
+                          </Button>
+                        </div>
+                      ) : (
+                        <BookingHistory bookings={bookings} />
+                      )}
                     </CardContent>
                   </Card>
                 </TabsContent>

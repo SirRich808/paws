@@ -1,101 +1,85 @@
 
 import React from "react";
-import { format, parseISO } from "date-fns";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Calendar, Clock, CheckCircle } from "lucide-react";
+import { format, isAfter, parseISO } from "date-fns";
 
-interface Booking {
+interface BookingProps {
   id: string;
   service: string;
-  date: string; // ISO format date
-  time: string; // e.g., "10:00 AM"
-  status: "upcoming" | "completed" | "canceled";
+  date: string;
+  time: string;
+  status: "upcoming" | "completed" | "cancelled";
 }
 
 interface BookingHistoryProps {
-  bookings: Booking[];
+  bookings: BookingProps[];
 }
 
-export function BookingHistory({ bookings }: BookingHistoryProps) {
-  const getStatusColor = (status: string) => {
+export const BookingHistory: React.FC<BookingHistoryProps> = ({ bookings }) => {
+  // Format date to display
+  const formatDate = (dateString: string) => {
+    try {
+      return format(parseISO(dateString), "MMMM d, yyyy");
+    } catch (error) {
+      console.error("Error formatting date:", error);
+      return dateString;
+    }
+  };
+
+  // Get status badge color
+  const getStatusBadgeClass = (status: string) => {
     switch (status) {
       case "upcoming":
-        return "text-blue-700 bg-blue-100 hover:bg-blue-100";
+        return "bg-blue-100 text-blue-800 hover:bg-blue-100";
       case "completed":
-        return "text-green-700 bg-green-100 hover:bg-green-100";
-      case "canceled":
-        return "text-red-700 bg-red-100 hover:bg-red-100";
+        return "bg-green-100 text-green-800 hover:bg-green-100";
+      case "cancelled":
+        return "bg-red-100 text-red-800 hover:bg-red-100";
       default:
-        return "text-gray-700 bg-gray-100 hover:bg-gray-100";
+        return "bg-gray-100 text-gray-800 hover:bg-gray-100";
     }
   };
 
-  const formatDate = (dateStr: string) => {
-    try {
-      return format(parseISO(dateStr), "MMMM d, yyyy");
-    } catch (error) {
-      return dateStr;
-    }
-  };
+  // Sort bookings to show upcoming first, then completed, then cancelled
+  const sortedBookings = [...bookings].sort((a, b) => {
+    // If one is upcoming and one is not, upcoming comes first
+    if (a.status === "upcoming" && b.status !== "upcoming") return -1;
+    if (b.status === "upcoming" && a.status !== "upcoming") return 1;
 
-  if (bookings.length === 0) {
-    return (
-      <div className="text-center py-12">
-        <p className="text-lg text-muted-foreground">No bookings found</p>
-        <Button className="mt-4 bg-lava hover:bg-ember">Book a Service</Button>
-      </div>
-    );
-  }
+    // If both have same status, sort by date (newest first for upcoming, oldest first for others)
+    if (a.status === "upcoming") {
+      return parseISO(b.date) > parseISO(a.date) ? 1 : -1;
+    } else {
+      return parseISO(b.date) > parseISO(a.date) ? -1 : 1;
+    }
+  });
 
   return (
-    <div className="space-y-6">
-      {bookings.map((booking) => (
-        <div 
-          key={booking.id}
-          className="border rounded-lg p-5 hover:shadow-md transition duration-200"
-        >
-          <div className="flex justify-between items-start">
-            <div>
-              <h4 className="font-semibold text-lg">{booking.service}</h4>
-              <div className="flex items-center mt-2 text-sm text-muted-foreground gap-4">
-                <div className="flex items-center gap-1">
-                  <Calendar className="h-4 w-4" />
-                  {formatDate(booking.date)}
-                </div>
-                <div className="flex items-center gap-1">
-                  <Clock className="h-4 w-4" />
-                  {booking.time}
-                </div>
-              </div>
-            </div>
-            <Badge className={getStatusColor(booking.status)} variant="outline">
-              {booking.status === "upcoming" && "Upcoming"}
-              {booking.status === "completed" && (
-                <span className="flex items-center gap-1">
-                  <CheckCircle className="h-3 w-3" /> Completed
-                </span>
-              )}
-              {booking.status === "canceled" && "Canceled"}
-            </Badge>
-          </div>
-
-          {booking.status === "upcoming" && (
-            <div className="mt-4 flex gap-3">
-              <Button variant="outline" size="sm">
-                Reschedule
-              </Button>
-              <Button variant="outline" size="sm" className="text-red-600 hover:bg-red-50">
-                Cancel
-              </Button>
-            </div>
-          )}
+    <div className="space-y-4">
+      {sortedBookings.length === 0 ? (
+        <div className="text-center py-8">
+          <p className="text-gray-500">No bookings found</p>
         </div>
-      ))}
-
-      <div className="pt-4 border-t">
-        <Button className="bg-lava hover:bg-ember">Schedule New Pickup</Button>
-      </div>
+      ) : (
+        sortedBookings.map((booking) => (
+          <div
+            key={booking.id}
+            className="flex flex-col md:flex-row justify-between p-4 border rounded-lg hover:bg-gray-50 transition-colors"
+          >
+            <div className="space-y-1">
+              <h3 className="font-medium">{booking.service}</h3>
+              <p className="text-sm text-gray-500">
+                {formatDate(booking.date)} at {booking.time}
+              </p>
+            </div>
+            <div className="mt-2 md:mt-0 flex items-center">
+              <Badge className={getStatusBadgeClass(booking.status)} variant="outline">
+                {booking.status.charAt(0).toUpperCase() + booking.status.slice(1)}
+              </Badge>
+            </div>
+          </div>
+        ))
+      )}
     </div>
   );
-}
+};
