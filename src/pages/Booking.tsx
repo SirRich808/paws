@@ -1,9 +1,8 @@
 
-import { useSearchParams, useNavigate } from "react-router-dom";
-import { toast } from "sonner";
+import { useSearchParams } from "react-router-dom";
+import { useBookingForm } from "../hooks/useBookingForm";
 import Navigation from "../components/Navigation";
 import Footer from "../components/Footer";
-import { useBookingForm } from "../hooks/useBookingForm";
 
 // Import our booking components
 import BookingFormContainer from "../components/booking/BookingFormContainer";
@@ -12,7 +11,6 @@ import { useCustomer } from "@/contexts/CustomerContext";
 
 const Booking = () => {
   const [searchParams] = useSearchParams();
-  const navigate = useNavigate();
   const { authState } = useCustomer();
 
   // Extract values from URL parameters
@@ -48,7 +46,7 @@ const Booking = () => {
     <div className="flex flex-col min-h-screen">
       <Navigation />
       
-      <main className="flex-grow py-20 bg-gradient-to-b from-amber-50 to-white">
+      <main className="flex-grow py-12 bg-gradient-to-b from-amber-50 to-white">
         <div className="container px-4 mx-auto">
           <div className="max-w-3xl mx-auto">
             {bookingComplete ? (

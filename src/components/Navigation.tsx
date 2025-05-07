@@ -25,70 +25,72 @@ const Navigation = () => {
   }, []);
 
   return (
-    <nav
-      className={`fixed w-full z-50 transition-all duration-300 ${
-        scrolled ? "bg-lava bg-opacity-95 py-2 shadow-lg" : "bg-transparent py-4"
-      }`}
-    >
-      <div className="container mx-auto px-6">
-        <div className="flex justify-between items-center bg-lava bg-opacity-90 rounded-full px-6 py-3 shadow-lg backdrop-blur-sm transition-all duration-300 hover:shadow-xl">
-          <Link
-            to="/"
-            className="text-white font-playfair text-2xl font-bold transition-all duration-300 hover:text-ember"
-          >
-            Pacific Animal Waste Services
-          </Link>
+    <>
+      <nav
+        className={`fixed top-0 left-0 right-0 w-full z-50 transition-all duration-300 ${
+          scrolled ? "bg-lava shadow-lg" : "bg-lava"
+        }`}
+      >
+        <div className="container mx-auto px-4">
+          <div className="flex justify-between items-center py-4">
+            <Link
+              to="/"
+              className="text-white font-playfair text-2xl font-bold transition-all duration-300 hover:text-ember"
+            >
+              Pacific Animal Waste Services
+            </Link>
 
-          <div className="hidden md:flex items-center space-x-10">
-            <NavLinks />
-            
-            <div className="flex items-center space-x-6">
-              <a
-                href="tel:8081234567"
-                className="text-white hover:text-ember transition-colors duration-300 hover:scale-105 px-3 py-1"
-              >
-                (808) 123-4567
-              </a>
+            <div className="hidden md:flex items-center space-x-8">
+              <NavLinks />
               
-              {authState.isAuthenticated ? (
-                <Link
-                  to="/profile"
-                  className="flex items-center gap-2 text-white hover:text-ember transition-colors duration-300 hover:scale-105 px-3 py-1"
+              <div className="flex items-center space-x-6">
+                <a
+                  href="tel:8081234567"
+                  className="text-white hover:text-ember transition-colors duration-300"
                 >
-                  <User size={20} />
-                  <span>My Account</span>
-                </Link>
-              ) : (
+                  (808) 123-4567
+                </a>
+                
+                {authState.isAuthenticated ? (
+                  <Link
+                    to="/profile"
+                    className="flex items-center gap-2 text-white hover:text-ember transition-colors duration-300"
+                  >
+                    <User size={20} />
+                    <span>My Account</span>
+                  </Link>
+                ) : (
+                  <Link
+                    to="/login"
+                    className="flex items-center gap-2 text-white hover:text-ember transition-colors duration-300"
+                  >
+                    <User size={20} />
+                    <span>Login</span>
+                  </Link>
+                )}
+                
                 <Link
-                  to="/login"
-                  className="flex items-center gap-2 text-white hover:text-ember transition-colors duration-300 hover:scale-105 px-3 py-1"
+                  to="/pricing"
+                  className="btn-primary shadow-md transition-all duration-300 hover:shadow-lg hover:translate-y-[-2px]"
                 >
-                  <User size={20} />
-                  <span>Login</span>
+                  Start Weekly Service
                 </Link>
-              )}
-              
-              <Link
-                to="/pricing"
-                className="btn-primary shadow-md transition-all duration-300 hover:shadow-lg hover:translate-y-[-2px]"
-              >
-                Start Weekly Service
-              </Link>
+              </div>
             </div>
-          </div>
 
-          <button
-            className="md:hidden text-white hover:text-ember transition-colors duration-300"
-            onClick={() => setIsMenuOpen(!isMenuOpen)}
-          >
-            {isMenuOpen ? <X size={24} /> : <Menu size={24} />}
-          </button>
+            <button
+              className="md:hidden text-white hover:text-ember transition-colors duration-300"
+              onClick={() => setIsMenuOpen(!isMenuOpen)}
+            >
+              {isMenuOpen ? <X size={24} /> : <Menu size={24} />}
+            </button>
+          </div>
         </div>
-      </div>
+      </nav>
 
       {/* Mobile menu */}
       {isMenuOpen && (
-        <div className="md:hidden bg-lava animate-fade-in rounded-b-2xl mt-2 mx-4 shadow-xl">
+        <div className="md:hidden fixed top-[72px] left-0 right-0 bg-lava z-40 animate-fade-in shadow-xl">
           <div className="container mx-auto px-4 py-6 space-y-4">
             <div className="flex flex-col space-y-4">
               <NavLinks mobile={true} closeMenu={() => setIsMenuOpen(false)} />
@@ -130,7 +132,10 @@ const Navigation = () => {
           </div>
         </div>
       )}
-    </nav>
+      
+      {/* Empty space to prevent content from being hidden under the navbar */}
+      <div className="h-[76px]"></div>
+    </>
   );
 };
 
@@ -154,7 +159,7 @@ const NavLinks = ({ mobile = false, closeMenu = () => {} }) => {
             text-white hover:text-ember transition-all duration-300
             ${mobile 
               ? "block py-3 text-center text-lg" 
-              : "px-3 py-2 rounded-md hover:bg-white hover:bg-opacity-10 font-medium hover:scale-105"}
+              : "px-3 py-1 font-medium hover:scale-105"}
           `}
           onClick={closeMenu}
         >
