@@ -3,10 +3,11 @@ import { useState } from "react";
 import Navigation from "../components/Navigation";
 import Footer from "../components/Footer";
 import { Check } from "lucide-react";
-import { useToast } from "../hooks/use-toast";
+import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
+import { Helmet } from "react-helmet-async";
 
 const Commercial = () => {
-  const { toast } = useToast();
   const [formData, setFormData] = useState({
     businessName: "",
     contactName: "",
@@ -23,17 +24,29 @@ const Commercial = () => {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     
-    // Simulate form submission
-    setTimeout(() => {
-      setLoading(false);
-      toast({
-        title: "Request submitted!",
-        description: "We'll get back to you within 24 hours.",
-      });
+    try {
+      // Submit to Supabase commercial_inquiries table
+      const { error } = await supabase
+        .from('commercial_inquiries')
+        .insert([{
+          business_name: formData.businessName,
+          contact_name: formData.contactName,
+          email: formData.email,
+          phone: formData.phone,
+          property_type: formData.propertyType,
+          address: formData.address,
+          message: formData.message
+        }]);
+        
+      if (error) throw error;
+      
+      toast.success("Quote request submitted! We'll get back to you within 24 hours.");
+      
+      // Reset form after successful submission
       setFormData({
         businessName: "",
         contactName: "",
@@ -43,7 +56,12 @@ const Commercial = () => {
         address: "",
         message: ""
       });
-    }, 1500);
+    } catch (error) {
+      console.error("Error submitting form:", error);
+      toast.error("There was an error submitting your request. Please try again or contact us directly.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   const benefits = [
@@ -81,6 +99,14 @@ const Commercial = () => {
 
   return (
     <div>
+      <Helmet>
+        <title>Commercial Pet Waste Services - Aloha Poop Scoop</title>
+        <meta 
+          name="description" 
+          content="Professional pet waste management solutions for apartments, HOAs, parks, and commercial properties throughout Hawaiian Paradise Park and Puna areas." 
+        />
+      </Helmet>
+      
       <Navigation />
       <div className="pt-24 pb-12 bg-lava text-white">
         <div className="container mx-auto px-4">
@@ -96,7 +122,7 @@ const Commercial = () => {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {benefits.map((benefit, index) => (
               <div key={index} className="border border-gray-200 rounded-lg p-6 hover-lift transition-all">
-                <div className="text-3xl mb-4">{benefit.icon}</div>
+                <div className="text-3xl mb-4" aria-hidden="true">{benefit.icon}</div>
                 <h3 className="text-xl font-bold mb-2">{benefit.title}</h3>
                 <p className="text-gray-600">{benefit.description}</p>
               </div>
@@ -167,7 +193,11 @@ const Commercial = () => {
                     value={formData.email}
                     onChange={handleChange}
                     className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-ember focus:border-transparent"
+                    aria-describedby="email-description"
                   />
+                  <p id="email-description" className="text-sm text-gray-500 mt-1">
+                    We'll never share your email with anyone else.
+                  </p>
                 </div>
                 <div>
                   <label htmlFor="phone" className="block mb-2 font-medium">Phone Number</label>
@@ -231,6 +261,7 @@ const Commercial = () => {
                   type="submit" 
                   className="btn-primary px-8 py-3" 
                   disabled={loading}
+                  aria-live="polite"
                 >
                   {loading ? 'Submitting...' : 'Request Quote'}
                 </button>

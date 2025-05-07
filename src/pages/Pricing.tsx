@@ -1,5 +1,6 @@
 
 import { useEffect } from "react";
+import { Helmet } from "react-helmet-async";
 import Navigation from "../components/Navigation";
 import Footer from "../components/Footer";
 import Plans from "../components/Plans";
@@ -11,6 +12,14 @@ const Pricing = () => {
 
   return (
     <div>
+      <Helmet>
+        <title>Pricing - Aloha Poop Scoop</title>
+        <meta 
+          name="description" 
+          content="Transparent pet waste removal pricing for HPP and Puna areas. Choose from weekly, bi-weekly or one-time service plans with no contracts." 
+        />
+      </Helmet>
+      
       <Navigation />
       <div className="pt-24 pb-12 bg-lava text-white">
         <div className="container mx-auto px-4">

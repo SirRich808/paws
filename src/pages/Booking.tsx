@@ -1,10 +1,9 @@
 
 import { useSearchParams } from "react-router-dom";
+import { Helmet } from "react-helmet-async";
 import { useBookingForm } from "../hooks/useBookingForm";
 import Navigation from "../components/Navigation";
 import Footer from "../components/Footer";
-
-// Import our booking components
 import BookingFormContainer from "../components/booking/BookingFormContainer";
 import BookingSuccess from "../components/booking/BookingSuccess";
 import { useCustomer } from "@/contexts/CustomerContext";
@@ -45,6 +44,14 @@ const Booking = () => {
 
   return (
     <div className="flex flex-col min-h-screen">
+      <Helmet>
+        <title>Book Your Pet Waste Removal Service - Aloha Poop Scoop</title>
+        <meta 
+          name="description" 
+          content="Schedule your pet waste removal service in HPP and Puna areas. Choose your service plan, date, and time for a cleaner yard." 
+        />
+      </Helmet>
+      
       <Navigation />
       
       <main className="flex-grow py-12 bg-gradient-to-b from-amber-50 to-white">

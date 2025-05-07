@@ -1,5 +1,6 @@
 
 import { useEffect } from "react";
+import { Helmet } from "react-helmet-async";
 import Hero from "../components/Hero";
 import HowItWorks from "../components/HowItWorks";
 import Plans from "../components/Plans";
@@ -19,6 +20,14 @@ const Index = () => {
 
   return (
     <div>
+      <Helmet>
+        <title>Aloha Poop Scoop - Professional Pet Waste Removal in Hawaiian Paradise Park</title>
+        <meta 
+          name="description" 
+          content="Professional pet waste removal services in Hawaiian Paradise Park (HPP) & nearby Puna areas. Weekly and bi-weekly service plans with satisfaction guarantee." 
+        />
+      </Helmet>
+      
       <Navigation />
       <Hero />
       <HowItWorks />

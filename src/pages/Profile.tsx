@@ -1,5 +1,7 @@
+
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { Helmet } from "react-helmet-async";
 import { useCustomer } from "../contexts/CustomerContext";
 import { toast } from "sonner";
 import Navigation from "../components/Navigation";
@@ -134,6 +136,14 @@ const Profile = () => {
 
   return (
     <div className="flex flex-col min-h-screen">
+      <Helmet>
+        <title>My Account - Aloha Poop Scoop</title>
+        <meta 
+          name="description" 
+          content="Manage your pet waste removal services, view booking history, update your subscription, and edit your account settings." 
+        />
+      </Helmet>
+      
       <Navigation />
       
       <main className="flex-grow bg-gray-50 py-12">
