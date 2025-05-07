@@ -76,21 +76,21 @@ const Profile = () => {
       service: "Weekly Service - 1 Dog",
       date: "2025-05-15",
       time: "10:00 AM",
-      status: "upcoming"
+      status: "upcoming" as const
     },
     {
       id: "booking_2",
       service: "Weekly Service - 1 Dog",
       date: "2025-05-08",
       time: "10:00 AM",
-      status: "completed"
+      status: "completed" as const
     },
     {
       id: "booking_3",
       service: "Weekly Service - 1 Dog",
       date: "2025-05-01",
       time: "10:00 AM",
-      status: "completed"
+      status: "completed" as const
     }
   ];
 
