@@ -10,7 +10,7 @@ import {
   CardHeader, 
   CardTitle 
 } from "@/components/ui/card";
-import { BookingFormValues } from "./BookingTypes";
+import { BookingFormValues } from "../../types/booking"; // Updated import
 import { UseFormReturn } from "react-hook-form";
 
 interface BookingSuccessProps {

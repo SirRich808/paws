@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import Navigation from "../components/Navigation";
 import Footer from "../components/Footer";
 import { useCustomer } from "../contexts/CustomerContext";
+import { supabase } from "@/integrations/supabase/client";
 
 // Import required UI components
 import { Button } from "@/components/ui/button";
@@ -28,7 +29,7 @@ import ScheduleStep from "../components/booking/ScheduleStep";
 import ReviewStep from "../components/booking/ReviewStep";
 import PaymentStep from "../components/booking/PaymentStep";
 import BookingSuccess from "../components/booking/BookingSuccess";
-import { BookingFormValues } from "../components/booking/BookingTypes";
+import { BookingFormValues } from "../types/booking"; // Updated import path
 
 const Booking = () => {
   const [searchParams] = useSearchParams();
@@ -129,20 +130,53 @@ const Booking = () => {
   };
 
   // Form submission handler
-  const onSubmit = (data: BookingFormValues) => {
+  const onSubmit = async (data: BookingFormValues) => {
     setIsLoading(true);
     
-    // Simulate API call for payment processing
-    setTimeout(() => {
-      setIsLoading(false);
-      setBookingComplete(true);
-      setConfirmationNumber(`APS${Math.floor(Math.random() * 10000)}`);
+    try {
+      // Save booking to Supabase if user is authenticated
+      if (authState.isAuthenticated && authState.customer) {
+        // Get service plan ID based on selected plan frequency
+        const { data: servicePlan } = await supabase
+          .from('service_plans')
+          .select('id')
+          .eq('frequency', data.servicePlan)
+          .single();
+          
+        if (servicePlan) {
+          // Insert booking into Supabase
+          const { error } = await supabase.from('bookings').insert({
+            customer_id: authState.customer.id,
+            service_plan_id: servicePlan.id,
+            num_dogs: parseInt(data.numDogs),
+            service_date: data.serviceDate,
+            service_time: data.serviceTime,
+            special_instructions: data.specialInstructions,
+            total_price: calculatePrice(),
+            address: `${data.address}, ${data.city}, ${data.state} ${data.zipCode}`,
+          });
+          
+          if (error) {
+            console.error("Error saving booking:", error);
+            toast.error("Failed to save booking");
+            setIsLoading(false);
+            return;
+          }
+        }
+      }
       
+      // Generate confirmation number
+      const confirmNum = `APS${Math.floor(Math.random() * 10000)}`;
+      setConfirmationNumber(confirmNum);
+      setBookingComplete(true);
       toast.success("Booking successful!");
       
-      // In a real app, this would send the booking data to your backend
-      console.log("Booking data:", data);
-    }, 1500);
+    } catch (error) {
+      console.error("Booking submission error:", error);
+      toast.error("There was a problem processing your booking");
+    } finally {
+      setIsLoading(false);
+    }
   };
   
   // Today's date for min value
