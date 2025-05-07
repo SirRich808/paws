@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useCustomer } from "../contexts/CustomerContext";
@@ -14,6 +13,7 @@ import SubscriptionTab from "@/components/SubscriptionTab";
 import AccountSettingsTab from "@/components/AccountSettingsTab";
 import { supabase } from "@/integrations/supabase/client";
 import { Loader2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 export interface BookingData {
   id: string;
