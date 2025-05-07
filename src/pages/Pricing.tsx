@@ -12,7 +12,7 @@ const Pricing = () => {
   return (
     <div>
       <Navigation />
-      <div className="bg-lava text-white">
+      <div className="pt-24 pb-12 bg-lava text-white">
         <div className="container mx-auto px-4">
           <h1 className="text-4xl md:text-5xl font-bold mb-4">Simple, Transparent Pricing</h1>
           <p className="text-xl max-w-2xl">
